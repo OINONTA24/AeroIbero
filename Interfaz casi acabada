@@ -1,0 +1,249 @@
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+from tkcalendar import DateEntry
+
+def crear_ventana(ventana, ancho=450, alto=580):
+    pantalla_ancho = ventana.winfo_screenwidth()
+    pantalla_alto = ventana.winfo_screenheight()
+    centro_x = int(pantalla_ancho / 2 - ancho / 2)
+    centro_y = int(pantalla_alto / 2 - alto / 2)
+    ventana.geometry(f"{ancho}x{alto}+{centro_x}+{centro_y}")
+
+class Interfaz_main:
+    def __init__(self, ventana_main):
+        self.ventana_main = ventana_main
+        self.ventana_main.title("AeroIbero Kevin y Pepe")
+        crear_ventana(ventana_main)
+        
+        self.Breservacion = tk.Button(self.ventana_main, text="Reserva vuelo", command=self.ir_reservacion)
+        self.Breservacion.place(x=60, y=120, width=350, height=100)
+        
+        self.Bconsulta = tk.Button(self.ventana_main, text="Consulta reserva", command=self.ir_consulta)
+        self.Bconsulta.place(x=60, y=340, width=350, height=100)
+        
+    def ir_reservacion(self):
+        self.ventana_main.withdraw()  # Oculta la ventana principal
+        crear_reservacion(self.ventana_main)  # Pasa la referencia
+        
+    def ir_consulta(self):
+        self.ventana_main.withdraw()  # Oculta la ventana principal
+        consulta_reservacion(self.ventana_main)  # Pasa la referencia
+
+class crear_reservacion():
+    def __init__(self, ventana_anterior):
+        self.ventana_anterior = ventana_anterior
+        self.Nventana = tk.Toplevel()  # Usamos Toplevel para no crear una nueva instancia de Tk
+        self.Nventana.title("Reservación vuelo")
+
+        def confirma_reserva():
+            self.Nventana.withdraw()
+            confirmar_reservacion(self.Nventana)
+
+        def get_fecha():
+            self.select_date = self.EnFecSalida.get()
+
+        # Vista ciudad origen
+        self.LCiuOr = tk.Label(self.Nventana, text="Ciudad de origen")
+        self.LCiuOr.place(x=20, y=0, width=120, height=30)
+        
+        self.CmBoxCiuOr = ttk.Combobox(self.Nventana, values=["python", "c"])
+        self.CmBoxCiuOr.place(x=20, y=30, width=150, height=30)
+ 
+        # Vista ciudad destino
+        self.LCiuDes = tk.Label(self.Nventana, text="Ciudad de destino")
+        self.LCiuDes.place(x=20, y=60, width=120, height=30)
+        
+        self.CmBoxCiuDes = ttk.Combobox(self.Nventana, values=["Narnia", "Narnia2"])
+        self.CmBoxCiuDes.place(x=20, y=90, width=150, height=30)
+
+        # Vista cantidad de personas
+        self.Lcantidad = tk.Label(self.Nventana, text="Cantidad")
+        self.Lcantidad.place(x=20, y=120, width=80, height=30)
+
+        self.comBoxCanti = ttk.Combobox(self.Nventana, values=["1", "2", "3", "4", "5", "6", "7", "8"])
+        self.comBoxCanti.place(x=20, y=150, width=150, height=30)
+        
+        # Vista fecha salida
+        self.LSalida = tk.Label(self.Nventana, text="Fecha de salida")
+        self.LSalida.place(x=20, y=180, width=80, height=30)
+
+        self.EnFecSalida = DateEntry(self.Nventana, date_pattern="yyyy-mm-dd")
+        self.EnFecSalida.place(x=20, y=210)
+        
+        self.BtnFecSalida = tk.Button(self.Nventana, text="Guardar fecha", command=get_fecha)
+        self.BtnFecSalida.place(x=20, y=240, width=120, height=30)
+        
+        #Estimacion de tiempo de vuelo
+        self.LTiempoT = tk.Label(self.Nventana,text="Tiempo estimado")
+        self.LTiempoT.place(x=230,y=0,width=150,height=30)
+        
+        self.TxtTiempoT = tk.Text(self.Nventana,width=150,height=30)
+        self.TxtTiempoT.config(state="disable")
+        self.TxtTiempoT.place(x=230,y=30,width=150,height=30)
+        self.TxtTiempoT.insert(tk.INSERT,"aqui va una operacion")
+        
+        
+        #Esto es la estimacion del costo total
+        self.LCostoT = tk.Label(self.Nventana,text="Costo total")
+        self.LCostoT.place(x=230,y=60,width=150,height=30)
+        
+        self.TxtCostoT = tk.Text(self.Nventana,width=150,height=30)
+        self.TxtCostoT.config(state="disable")
+        self.TxtCostoT.place(x=230,y=90,width=150,height=30)
+        self.TxtCostoT.insert(tk.INSERT,"aqui va una operacion2")
+        
+        #Reservar vista
+        self.BReservar = tk.Button(self.Nventana,text="Confirmar reservacion",command=confirma_reserva)
+        self.BReservar.place(x=70,y=330,width=150,height=30)
+
+        # Botón para regresar al menú principal
+        self.BRegresar = tk.Button(self.Nventana, text="Regresar", command=self.regresar)
+        self.BRegresar.place(x=250, y=330, width=120, height=30)
+
+        crear_ventana(self.Nventana)
+
+    def regresar(self):
+        self.Nventana.destroy()  # Cierra la ventana de reservación
+        self.ventana_anterior.deiconify()  # Muestra el menú principal nuevamente
+
+class consulta_reservacion():
+    def __init__(self, ventana_anterior):
+        self.ventana_anterior = ventana_anterior
+        self.Nventana = tk.Toplevel()
+        self.Nventana.title("Consulta de Reservación")
+        
+        self.LConsulta = tk.Label(self.Nventana, text="Ingresa el código\nprimeras letras de Nombre y apellidos")
+        self.LConsulta.place(x=100, y=40, width=200, height=60)
+        
+        self.TxtConsulta = tk.Text(self.Nventana, width=150, height=30)
+        self.TxtConsulta.place(x=120, y=100, width=150, height=30)
+        
+        self.BConsulta = tk.Button(self.Nventana, text="Buscar", command=self.buscar_vuelo)
+        self.BConsulta.place(x=120, y=140, width=150, height=30)
+        
+        # Botón para regresar al menú principal
+        self.BRegresar = tk.Button(self.Nventana, text="Regresar", command=self.regresar)
+        self.BRegresar.place(x=120, y=180, width=150, height=30)
+
+        crear_ventana(self.Nventana)
+
+    def buscar_vuelo(self):
+        return None  # Se implementará más adelante
+
+    def regresar(self):
+        self.Nventana.destroy()  # Cierra la ventana de consulta
+        self.ventana_anterior.deiconify()  # Muestra el menú principal nuevamente
+
+class confirmar_reservacion():
+    def __init__(self, ventana_anterior):
+        self.ventana_anterior = ventana_anterior
+        self.Nventana = tk.Toplevel()
+        self.Nventana.title("Confirma reservación")
+        
+        self.BConfirma = tk.Button(self.Nventana, text="Confirmar", command=self.Irllenar_infoPerso)
+        self.BConfirma.place(x=120, y=130, width=150, height=30)
+        
+        self.BRegresar = tk.Button(self.Nventana, text="Regresa", command=self.regresar)
+        self.BRegresar.place(x=120, y=180, width=150, height=30)
+        
+        crear_ventana(self.Nventana)
+        
+    def Irllenar_infoPerso(self):
+        self.Nventana.withdraw()
+        llenar_infoPerso(self.Nventana)
+        
+    def regresar(self):
+        self.Nventana.destroy()  # Cierra la ventana de consulta
+        self.ventana_anterior.deiconify()  # Muestra el menú principal nuevamente
+        
+        
+class llenar_infoPerso():
+    def __init__(self, ventana_anterior):
+        self.ventana_anterior = ventana_anterior
+        self.Nventana = tk.Toplevel()
+        self.Nventana.title("Informacion personal")
+        
+        def guardar_infoPer(self):
+            return None
+        
+        #Nombre(s)
+        self.LNombre = tk.Label(self.Nventana, text="Nombre(s)")
+        self.LNombre.place(x=20, y=0, width=120, height=20)
+        
+        self.TxtNombre = tk.Text(self.Nventana, width=150, height=30)
+        self.TxtNombre.place(x=20, y=20, width=150, height=20)
+        
+        #Apellido Paterno
+        self.LApaterno = tk.Label(self.Nventana, text="Apellido paterno")
+        self.LApaterno.place(x=20, y=40, width=150, height=30)
+        
+        self.TxtApaterno = tk.Text(self.Nventana, width=120, height=30)
+        self.TxtApaterno.place(x=20, y=70, width=150, height=20)
+        
+        #Apellido Materno
+        self.LAmaterno = tk.Label(self.Nventana, text="Apellido materno")
+        self.LAmaterno.place(x=20, y=100, width=150, height=30)
+        
+        self.TxtAmaterno = tk.Text(self.Nventana, width=120, height=30)
+        self.TxtAmaterno.place(x=20, y=130, width=150, height=20)
+        
+        #Raza
+        self.LRaza= tk.Label(self.Nventana, text="Raza")
+        self.LRaza.place(x=20, y=160, width=150, height=30)
+        
+        self.CmBoxRaza = ttk.Combobox(self.Nventana, values=["Humano", "Elfo","Orco","Enano"])
+        self.CmBoxRaza.place(x=20, y=180, width=150, height=20)
+
+        #otra raza
+        self.LRaza= tk.Label(self.Nventana, text="Nombra tu raza")
+        self.LRaza.place(x=20, y=210, width=150, height=20)
+        
+        self.TxtRaza = tk.Text(self.Nventana, width=150, height=30)
+        self.TxtRaza.place(x=20, y=240, width=150, height=20)
+        
+        self.BGuardaRaza = tk.Button(self.Nventana,text="Guardar Raza", command=self.agregar_Nraza)
+        self.BGuardaRaza.place(x=20,y=270,width=150, height=20)
+        
+        #Correo
+        self.LCorreo= tk.Label(self.Nventana, text="Correo")
+        self.LCorreo.place(x=210, y=0, width=150, height=20)
+        
+        self.TxtCorreo = tk.Text(self.Nventana, width=150, height=30)
+        self.TxtCorreo.place(x=210, y=20, width=150, height=20)
+        
+        #Numero de celular
+        self.LNcel= tk.Label(self.Nventana, text="Num. Celular")
+        self.LNcel.place(x=210, y=40, width=150, height=20)
+        
+        self.TxtNcel = tk.Text(self.Nventana, width=150, height=30)
+        self.TxtNcel.place(x=210, y=70, width=150, height=20)
+        
+        #Nacionalidad
+        self.LNcel= tk.Label(self.Nventana, text="Nacionalidad")
+        self.LNcel.place(x=210, y=100, width=150, height=20)
+        
+        self.CmBoxRaza = ttk.Combobox(self.Nventana, values=["Narnia", "Nose","Nose","Nose"])
+        self.CmBoxRaza.place(x=210, y=130, width=150, height=20)
+        
+        self.BListo = tk.Button(self.Nventana,text="Listo",command=guardar_infoPer)
+        self.BListo.place(x=120, y=300,width=150,height=20)
+        
+        #vuelve a la ventana anterior
+        self.BRegresar = tk.Button(self.Nventana, text="Regresar", command=self.regresar)
+        self.BRegresar.place(x=120, y=330, width=150, height=20)
+
+        crear_ventana(self.Nventana)
+
+    def regresar(self):
+        self.Nventana.destroy()
+        self.ventana_anterior.deiconify()
+    
+    def agregar_Nraza(self):
+        return None
+
+ventanaM = tk.Tk()
+interfaz = Interfaz_main(ventanaM)
+ventanaM.mainloop()
+
+
