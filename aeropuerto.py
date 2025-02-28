@@ -38,9 +38,10 @@ class crear_reservacion():
         self.Nventana = tk.Toplevel()  # Usamos Toplevel para no crear una nueva instancia de Tk
         self.Nventana.title("Reservación vuelo")
         
-        self.df = pd.read_csv("CiudadesAeroIbero.csv")
-        
+        self.df = pd.read_csv("CiudadesAeroIbero.csv", encoding = "latin1",usecols=["Origen", "Destino", "Tiempo total (Hrs)", " Costo total "])
+
         self.box_value = StringVar()
+        self.box_tipoV = StringVar()
 
         def confirma_reserva():
             self.Nventana.withdraw()
@@ -77,6 +78,14 @@ class crear_reservacion():
         self.comBoxCanti = ttk.Combobox(self.Nventana,textvariable=self.box_value, state = 'readonly')
         self.comBoxCanti["values"] = ["1", "2", "3", "4", "5", "6", "7", "8"]
         self.comBoxCanti.place(x=20, y=150, width=150, height=30)
+
+        #Tipo de viaje
+        self.LSalida = tk.Label(self.Nventana, text="Tipo de viaje")
+        self.LSalida.place(x=260, y=120, width=80, height=30)    
+            
+        self.tipoViaje = ttk.Combobox(self.Nventana,textvariable=self.box_tipoV, state = 'readonly')
+        self.tipoViaje["values"] = ["Corto", "Optimo", "Economico"]
+        self.tipoViaje.place(x=230, y=150, width=150, height=30)
         
         # Vista fecha salida
         self.LSalida = tk.Label(self.Nventana, text="Fecha de salida")
@@ -113,18 +122,18 @@ class crear_reservacion():
         crear_ventana(self.Nventana)
         
     def actualizar_info_vuelo(self):
-        origen = self.CmBoxCiuOr.get()
-        destino = self.CmBoxCiuDes.get()
+        origen = self.CmBoxCiuOr.get().strip()
+        destino = self.CmBoxCiuDes.get().strip()
         
         if origen and destino:
             resultado = self.df[(self.df['Origen'].str.strip() == origen) & (self.df['Destino'].str.strip() == destino)]
             
             if not resultado.empty:
-                tiempo_estimado = resultado.iloc[0]['Tiempo total']
-                costo_total = resultado.iloc[0]['Costo total']
+                tiempo_estimado = resultado.iloc[0]['Tiempo total (Hrs)']
+                costo_total = resultado.iloc[0][' Costo total ']
 
                 self.TxtTiempoT.config(text=f"{tiempo_estimado} horas")
-                self.TxtCostoT.config(text=f"${costo_total}")
+                self.TxtCostoT.config(text=f"{costo_total}")
             else:
                 self.TxtTiempoT.config(text="No disponible")
                 self.TxtCostoT.config(text="No disponible")
@@ -134,6 +143,7 @@ class crear_reservacion():
         destino = self.CmBoxCiuDes.get().strip()
         cantidadPer = self.box_value.get().strip()
         fecha_salida = self.EnFecSalida.get()
+        tipo_viaje = self.tipoViaje.get().strip()
         tiempo_estimado = self.TxtTiempoT.cget("text")
         costo_total = self.TxtCostoT.cget("text")
         if not origen or not destino or not cantidadPer or tiempo_estimado == '---' or costo_total == '---':
@@ -143,15 +153,16 @@ class crear_reservacion():
             print("Error: La ciudad de origen y destino no pueden ser las mismas.")
             return
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        Narchivo = f"confirmacion_de_vuelo_{timestamp}.txt"
+        #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        Narchivo = f"confirmacion_de_vuelo_{origen}_{destino}_{cantidadPer}.txt"
         with open(Narchivo,"w") as archivo:
             archivo.write(f"Ciudad origen: {origen}\n")
             archivo.write(f"Ciudad destino: {destino}\n")
             archivo.write(f"Pasajeros: {cantidadPer}\n")
-            archivo.write(f"Fecha de salida: {fecha_salida}")
-            archivo.write(f"Tiempo estimado: {tiempo_estimado}")
-            archivo.write(f"Costo total: {costo_total}")
+            archivo.write(f"Fecha de salida: {fecha_salida}\n")
+            archivo.write(f"Tiempo estimado: {tiempo_estimado}\n")
+            archivo.write(f"Tiempo estimado: {tipo_viaje}\n")
+            archivo.write(f"Costo total: {costo_total}\n")
                 
         print(f"Reservación guardada en {Narchivo}")
 
