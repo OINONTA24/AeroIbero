@@ -37,11 +37,10 @@ class crear_reservacion():
         self.ventana_anterior = ventana_anterior
         self.Nventana = tk.Toplevel()  # Usamos Toplevel para no crear una nueva instancia de Tk
         self.Nventana.title("Reservación vuelo")
-        self.archivo = op.load_workbook('CiudadesAeroIbero.xlsx')
+        
+        self.df = pd.read_csv("CiudadesAeroIbero.csv")
         
         self.box_value = StringVar()
-        
-        self.ws = self.archivo.active
 
         def confirma_reserva():
             self.Nventana.withdraw()
@@ -59,18 +58,20 @@ class crear_reservacion():
         self.LCiuOr = tk.Label(self.Nventana, text="Ciudad de origen")
         self.LCiuOr.place(x=20, y=0, width=120, height=30)
         
-        self.CmBoxCiuOr = ttk.Combobox(self.Nventana, values=["La comarca ", "Rivendel","Rohan","Gondor","Mordor","Isengard","Moria","Erebor","Reino del Bosque","Narnia","Telmar","Charn","Ciudad Esmeralda","Winkie"])
+        self.CmBoxCiuOr = ttk.Combobox(self.Nventana, values=list(self.df['Origen'].unique()),state="readonly")
         self.CmBoxCiuOr.place(x=20, y=30, width=150, height=30)
+        self.CmBoxCiuOr.bind("<<ComboboxSelected>>", lambda e: self.actualizar_info_vuelo())
  
         # Vista ciudad destino
         self.LCiuDes = tk.Label(self.Nventana, text="Ciudad de destino")
         self.LCiuDes.place(x=20, y=60, width=120, height=30)
         
-        self.CmBoxCiuDes = ttk.Combobox(self.Nventana, values=["La comarca ", "Rivendel","Rohan","Gondor","Mordor","Isengard","Moria","Erebor","Reino del Bosque","Narnia","Telmar","Charn","Ciudad Esmeralda","Winkie"])
+        self.CmBoxCiuDes = ttk.Combobox(self.Nventana, values=list(self.df['Destino'].unique()),state ="readonly")
         self.CmBoxCiuDes.place(x=20, y=90, width=150, height=30)
+        self.CmBoxCiuDes.bind("<<ComboboxSelected>>", lambda e: self.actualizar_info_vuelo())
 
         # Vista cantidad de personas
-        self.Lcantidad = tk.Label(self.Nventana, text="Cantidad")
+        self.Lcantidad = tk.Label(self.Nventana, text="pasajeros")
         self.Lcantidad.place(x=20, y=120, width=80, height=30)
 
         self.comBoxCanti = ttk.Combobox(self.Nventana,textvariable=self.box_value, state = 'readonly')
@@ -91,19 +92,15 @@ class crear_reservacion():
         self.LTiempoT = tk.Label(self.Nventana,text="Tiempo estimado")
         self.LTiempoT.place(x=230,y=0,width=150,height=30)
         
-        self.TxtTiempoT = tk.Text(self.Nventana,width=150,height=30)
-        self.TxtTiempoT.config(state="disable")
+        self.TxtTiempoT = tk.Label(self.Nventana, text="----")
         self.TxtTiempoT.place(x=230,y=30,width=150,height=30)
-        self.TxtTiempoT.insert(tk.INSERT,"aqui va una operacion")
         
         #Esto es la estimacion del costo total
         self.LCostoT = tk.Label(self.Nventana,text="Costo total")
         self.LCostoT.place(x=230,y=60,width=150,height=30)
         
-        self.TxtCostoT = tk.Text(self.Nventana,width=150,height=30)
-        self.TxtCostoT.config(state="disable")
+        self.TxtCostoT = tk.Label(self.Nventana,text="---")
         self.TxtCostoT.place(x=230,y=90,width=150,height=30)
-        self.TxtCostoT.insert(tk.INSERT,"aqui va una operacion2")
         
         #Reservar vista
         self.BReservar = tk.Button(self.Nventana,text="Confirmar reservacion",command=self.valida_reserva)
@@ -115,21 +112,48 @@ class crear_reservacion():
 
         crear_ventana(self.Nventana)
         
+    def actualizar_info_vuelo(self):
+        origen = self.CmBoxCiuOr.get()
+        destino = self.CmBoxCiuDes.get()
+        
+        if origen and destino:
+            resultado = self.df[(self.df['Origen'].str.strip() == origen) & (self.df['Destino'].str.strip() == destino)]
+            
+            if not resultado.empty:
+                tiempo_estimado = resultado.iloc[0]['Tiempo total']
+                costo_total = resultado.iloc[0]['Costo total']
+
+                self.TxtTiempoT.config(text=f"{tiempo_estimado} horas")
+                self.TxtCostoT.config(text=f"${costo_total}")
+            else:
+                self.TxtTiempoT.config(text="No disponible")
+                self.TxtCostoT.config(text="No disponible")
+        
     def valida_reserva(self):
         origen = self.CmBoxCiuOr.get().strip()
         destino = self.CmBoxCiuDes.get().strip()
         cantidadPer = self.box_value.get().strip()
-        if origen == destino:
-            print("Origen o destino no validos\n")
-        elif not origen or not destino or not cantidadPer:
+        fecha_salida = self.EnFecSalida.get()
+        tiempo_estimado = self.TxtTiempoT.cget("text")
+        costo_total = self.TxtCostoT.cget("text")
+        if not origen or not destino or not cantidadPer or tiempo_estimado == '---' or costo_total == '---':
             print("Checa que los campos no esten vacios\n")
-        else:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            Narchivo = f"confirmacion_de_vuelo_{timestamp}.txt"
-            with open(Narchivo,"w") as archivo:
-                archivo.write(f"Ciudad origen: {origen}\nCiudad destino: {destino}\nPasajeros: {cantidadPer}\nFecha de salida: {self.select_date}")
+            return
+        if origen == destino:
+            print("Error: La ciudad de origen y destino no pueden ser las mismas.")
+            return
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        Narchivo = f"confirmacion_de_vuelo_{timestamp}.txt"
+        with open(Narchivo,"w") as archivo:
+            archivo.write(f"Ciudad origen: {origen}\n")
+            archivo.write(f"Ciudad destino: {destino}\n")
+            archivo.write(f"Pasajeros: {cantidadPer}\n")
+            archivo.write(f"Fecha de salida: {fecha_salida}")
+            archivo.write(f"Tiempo estimado: {tiempo_estimado}")
+            archivo.write(f"Costo total: {costo_total}")
                 
-            print(f"Reservación guardada en {Narchivo}")
+        print(f"Reservación guardada en {Narchivo}")
 
     def regresar(self):
         self.Nventana.destroy()  # Cierra la ventana de reservación
@@ -295,4 +319,3 @@ class llenar_infoPerso():
 ventanaM = tk.Tk()
 interfaz = Interfaz_main(ventanaM)
 ventanaM.mainloop()
-
